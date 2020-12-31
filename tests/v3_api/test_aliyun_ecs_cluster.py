@@ -4,7 +4,8 @@ import pytest
 
 ALIYUN_ECS_ACCESS_KEY = os.environ.get('RANCHER_ALIYUN_ECS_ACCESS_KEY', "")
 ALIYUN_ECS_SECRET_KEY = os.environ.get('RANCHER_ALIYUN_ECS_SECRET_KEY', "")
-ALIYUN_ECS_REGION = os.environ.get('RANCHER_ALIYUN_ECS_REGION', "cn-shenzhen")
+ALIYUN_ECS_REGION = os.environ.get('RANCHER_ALIYUN_ECS_REGION', "cn-zhangjiakou")
+ALIYUN_ECS_ZONE = os.environ.get('RANCHER_ALIYUN_ECS_REGION', "cn-zhangjiakou-a")
 
 aliyunecscredential = pytest.mark.skipif(not (ALIYUN_ECS_ACCESS_KEY and ALIYUN_ECS_SECRET_KEY),
                                    reason='ALIYUN ECS Credentials not provided, '
@@ -41,39 +42,44 @@ def test_create_aliyun_ecs_cluster():
 def get_node_template():
     aliyunecsConfig =  {
         "accessKeyId": ALIYUN_ECS_ACCESS_KEY,
+        "accessKeySecret": ALIYUN_ECS_SECRET_KEY,
         "apiEndpoint": "",
         "description": "",
-        "diskCategory": "cloud_efficiency",
+        "diskCategory": "cloud_ssd",
         "diskFs": "ext4",
-        "diskSize": "0",
-        "imageId": "ubuntu_16_04_64_20G_alibase_20190620.vhd",
+        "diskSize": "40",
+        "imageId": "ubuntu_20_04_x64_20G_alibase_20201120.vhd",
         "instanceType": "ecs.g5.large",
-        "internetMaxBandwidth": "1",
-        "ioOptimized": "optimized",
+        "internetChargeType": "PayByTraffic",
+        "internetMaxBandwidth": "100",
+        "ioOptimized": "true",
         "privateAddressOnly": False,
         "privateIp": "",
         "region": ALIYUN_ECS_REGION,
+        "resourceGroupId": "",
         "routeCidr": "",
-        "securityGroup": "sg-wz974bqip62ylkx5aq6r",
+        "securityGroup": "sg-8vb8cjllgpghz8cl38jw",
         "slbId": "",
         "sshKeyContents": "",
         "sshKeypair": "",
         "sshPassword": "",
-        "systemDiskCategory": "cloud_efficiency",
+        "systemDiskCategory": "cloud_ssd",
         "systemDiskSize": "40",
         "upgradeKernel": False,
-        "vpcId": "vpc-d9b73rns0",
-        "vswitchId": "vsw-wz9h0eyi4yyewa0rio9vy",
-        "zone": "cn-shenzhen-e",
-        "type": "aliyunecsConfig",
-        "accessKeySecret": ALIYUN_ECS_SECRET_KEY
+        "vpcId": "vpc-8vbaylmes0pejd94gnxa1",
+        "vswitchId": "vsw-8vbyk12961k62a0erw7hp",
+        "zone": "cn-zhangjiakou-a",
+        "type": ALIYUN_ECS_ZONE
+
     }
 
     # Generate the config for ALIYUN ECS cluster
     nodeTemplate = {
         "aliyunecsConfig": aliyunecsConfig,
         "name": random_test_name("test-auto-aliyunecs-nodeTemplate"),
-        "type": "nodeTemplate"
+        "type": "nodeTemplate",
+        "useInternalIpAddress": True,
+        "engineInstallURL": "https://drivers.rancher.cn/pandaria/docker-install/19.03-aliyun.sh",
     }
     print("\nALIYUN ECS NodeTemplate")
     print(nodeTemplate)
@@ -87,12 +93,24 @@ def get_rancherK8sEngine_config():
         "ignoreDockerVersion": True,
         "sshAgentAuth": False,
         "type": "rancherKubernetesEngineConfig",
-        "kubernetesVersion": "v1.14.6-rancher1-1",
+        "kubernetesVersion": "v1.18.12-rancher1-1",
         "authentication": {
             "strategy": "x509",
             "type": "authnConfig"
         },
+        "dns": {
+            "type": "dnsConfig",
+            "nodelocal": {
+                "type": "nodelocal",
+                "ip_address": "",
+                "node_selector": None,
+                "update_strategy": {
+
+                }
+            }
+        },
         "network": {
+            "mtu": 0,
             "plugin": "canal",
             "type": "networkConfig",
             "options": {
@@ -100,11 +118,14 @@ def get_rancherK8sEngine_config():
             }
         },
         "ingress": {
+            "httpPort": 0,
+            "httpsPort": 0,
             "provider": "nginx",
             "type": "ingressConfig"
         },
         "monitoring": {
             "provider": "metrics-server",
+            "replicas": 1,
             "type": "monitoringConfig"
         },
         "services": {
@@ -121,23 +142,61 @@ def get_rancherK8sEngine_config():
                     "heartbeat-interval": 500,
                     "election-timeout": 5000
                 },
+                "gid": 0,
                 "retention": "72h",
                 "snapshot": False,
+                "uid": 0,
                 "type": "etcdService",
                 "backupConfig": {
                     "enabled": True,
                     "intervalHours": 12,
                     "retention": 6,
+                    "safeTimestamp": False,
                     "type": "backupConfig"
                 }
             }
+        },
+        "upgradeStrategy": {
+            "maxUnavailableControlplane": "1",
+            "maxUnavailableWorker": "10%",
+            "drain": "false",
+            "nodeDrainInput": {
+                "deleteLocalData": False,
+                "force": False,
+                "gracePeriod": -1,
+                "ignoreDaemonSets": True,
+                "timeout": 120,
+                "type": "nodeDrainInput"
+            },
+            "maxUnavailableUnit": "percentage"
         }
     }
 
     rancherK8sEngineConfig = {
+        "dockerRootDir": "/var/lib/docker",
+        "enableClusterAlerting": False,
+        "enableClusterMonitoring": False,
+        "enableDualStack": False,
+        "enableGPUManagement": False,
+        "enableNetworkPolicy": False,
+        "fluentdLogDir": "/var/lib/rancher/fluentd/log",
+        "gpuSchedulerNodePort": "32666",
+        "windowsPreferedCluster": False,
         "rancherKubernetesEngineConfig": rancherKubernetesEngineConfig,
         "name": random_test_name("test-auto-rke-aliyunecs"),
-        "type": "cluster"
+        "type": "cluster",
+        "localClusterAuthEndpoint": {
+            "enabled": True,
+            "type": "localClusterAuthEndpoint"
+        },
+        "labels": {
+
+        },
+        "scheduledClusterScan": {
+            "enabled": False,
+            "scheduleConfig": None,
+            "scanConfig": None
+        }
     }
     print("\nRKE ALIYUNECS Configuration")
     print(rancherK8sEngineConfig)
@@ -148,6 +207,7 @@ def get_rancherK8sEngine_config():
 def get_node_pool(nodeTemplate,cluster):
     nodePool = {
         "controlPlane": True,
+        "deleteNotReadyAfterSecs": 0,
         "etcd": True,
         "quantity": 1,
         "worker": True,

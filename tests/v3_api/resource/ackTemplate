@@ -17,7 +17,7 @@
         "displayName": "{{name}}",
         "driverName": "aliyunkubernetescontainerservice",
         "endpointPublicAccess": true,
-        "keyPair": "tlaly",
+        "keyPair": "tanglei-pem",
         "kubernetesVersion": "{{kubernetesVersion}}",
         "loginPassword": "",
         "masterAutoRenew": true,
@@ -33,24 +33,24 @@
         "osType": "Linux",
         "platform": "CentOS",
         "proxyMode": "{{proxyMode}}",
-        "regionId": "cn-shenzhen",
-        "resourceGroupId": "rg-aekznqknpufycli",
+        "regionId": "cn-zhangjiakou",
+        "resourceGroupId": "",
         "securityGroupId": "",
         "snatEntry": true,
         "sshFlags": false,
         "timeoutMins": 0,
-        "vpcId": "vpc-wz9w3n6qo00qmrz490ox9",
+        "vpcId": "vpc-8vbaylmes0pejd94gnxa1",
         "workerAutoRenew": false,
         "workerAutoRenewPeriod": 0,
         "workerDataDisk": true,
-        "workerDataDiskCategory": "cloud_ssd",
+        "workerDataDiskCategory": "cloud_efficiency",
         "workerDataDiskSize": 40,
         "workerInstanceChargeType": "PostPaid",
         "workerPeriod": 0,
         "workerPeriodUnit": "",
-        "workerSystemDiskCategory": "cloud_ssd",
+        "workerSystemDiskCategory": "cloud_efficiency",
         "workerSystemDiskSize": 40,
-        "zoneId": "cn-shenzhen-e",
+        "zoneId": "cn-zhangjiakou-a",
         "type": "aliyunEngineConfig",
         "addons": [
             {
@@ -58,22 +58,22 @@
             }
         ],
         "masterVswitchIds": [
-            "vsw-wz92luxws1tw85eymhxft",
-            "vsw-wz92luxws1tw85eymhxft",
-            "vsw-wz92luxws1tw85eymhxft"
+            "vsw-8vbyk12961k62a0erw7hp",
+            "vsw-8vbyk12961k62a0erw7hp",
+            "vsw-8vbyk12961k62a0erw7hp"
         ],
         "workerVswitchIds": [
-            "vsw-wz92luxws1tw85eymhxft"
+            "vsw-8vbyk12961k62a0erw7hp"
         ],
         {{#isAlyunKubernetes}}
         "masterInstanceTypes": [
-            "ecs.c6.large",
-            "ecs.c6.large",
-            "ecs.c6.large"
+             "ecs.g5.large",
+             "ecs.g5.large",
+             "ecs.g5.large"
         ],
         {{/isAlyunKubernetes}}
         "workerInstanceTypes": [
-            "ecs.c6.large"
+            "ecs.g5.large"
         ]
     },
     "name": "{{name}}",
