@@ -34,7 +34,7 @@ RANCHER_HARBOR2_AD_ADMIN_PASSWORD = os.environ.get('RANCHER_HARBOR2_AD_ADMIN_PAS
 #ANCHER_GENERAL_USER_TOKEN = os.environ.get('ANCHER_GENERAL_USER_TOKEN', "")
 
 # AD info
-RANCHER_AD_SERVER = os.environ.get('RANCHER_AD_SERVER', "54.206.106.116")
+RANCHER_AD_SERVER = os.environ.get('RANCHER_AD_SERVER', "3.26.37.190")
 RANCHER_AD_ADMIN_USERNAME = os.environ.get('RANCHER_AD_ADMIN_USERNAME', "dinglu")
 RANCHER_AD_ADMIN_PASSWORD = os.environ.get('RANCHER_AD_ADMIN_USERNAME', "Rancher@123")
 RANCHER_AD_GENERAL_USERNAME = os.environ.get('RANCHER_AD_GENERAL_USERNAME', "tanglei")
@@ -63,12 +63,12 @@ token = {}
 params = [
     # {"password":RANCHER_HARBOR_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR_URL,"version":"","option":"harborV1","authType":"LDAP"}, # harbor v1
      {"password":RANCHER_HARBOR2_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR2_URL,"version":"v2.0","option":"harborV2","authType":"LDAP"}, # harbor v2
-     {"password":RANCHER_HARBOR_LDAP_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR_LDAP_URL,"version":"","option":"harborLdapV1","authType":"LDAP"}, # LDAP harbor v1
-     {"password":RANCHER_HARBOR2_LDAP_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR2_LDAP_URL,"version":"v2.0","option":"harborLdapV2","authType":"LDAP"},# LDAP harbor v2
+    # {"password":RANCHER_HARBOR_LDAP_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR_LDAP_URL,"version":"","option":"harborLdapV1","authType":"LDAP"}, # LDAP harbor v1
+    # {"password":RANCHER_HARBOR2_LDAP_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR2_LDAP_URL,"version":"v2.0","option":"harborLdapV2","authType":"LDAP"},# LDAP harbor v2
     # {"password":RANCHER_HARBOR_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR_URL,"version":"","option":"harborV1","authType":"AD"}, # harbor v1
      {"password":RANCHER_HARBOR2_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR2_URL,"version":"v2.0","option":"harborV2","authType":"AD"}, # harbor v2
-     {"password":RANCHER_HARBOR_AD_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR_AD_URL,"version":"","option":"harborAdV1","authType":"AD"}, # LDAP harbor v1
-     {"password":RANCHER_HARBOR2_AD_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR2_AD_URL,"version":"v2.0","option":"harborAdV2","authType":"AD"} # LDAP harbor v2
+   #  {"password":RANCHER_HARBOR_AD_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR_AD_URL,"version":"","option":"harborAdV1","authType":"AD"}, # LDAP harbor v1
+   #  {"password":RANCHER_HARBOR2_AD_ADMIN_PASSWORD,"serverURL":RANCHER_HARBOR2_AD_URL,"version":"v2.0","option":"harborAdV2","authType":"AD"} # LDAP harbor v2
 ]
 
 def print_object(obj):
@@ -140,6 +140,18 @@ def test_create_project_client():
 def test_set_http_harborconfig():
     set_http_harborconfig()
 
+# 添加仓库项目 https://ha.tangstone.store/meta/harbor/https:/harbor2.tangstone.store/api/v2.0/projects
+def test_add_harbor_project():
+    if params[i]["option"] != "harborV2":
+        pytest.skip("harborV1 or harborLdapV1 or harborLdapV2 or harborAdV1 or harborAdV2 does not run")
+
+    projectName = "test"
+    re = add_harbor_project(projectName,10)
+    assert re.status_code in {200, 201}, "add harbor project failed"
+    re = delete_harbor_project(projectName)
+    assert re.status_code in {200, 201}, "delete harbor project failed"
+
+
 # 普通用户Harbor账号同步
 @harborcredential
 @harborpwdcredential
@@ -152,6 +164,38 @@ def test_harbor_accout_sync():
         authType = "activedirectory"
 
     harbor_accout_sync(authType)
+
+# 普通用户添加仓库项目
+def test_general_user_add_harbor_project():
+    if params[i]["option"] != "harborV2":
+        pytest.skip("harborV1 or harborLdapV1 or harborLdapV2 or harborAdV1 or harborAdV2 does not run")
+
+    projectName = "general_user_test"
+    re = add_general_user_add_harbor_project(projectName,-1)
+    assert re.status_code in {200, 201}, "general user add harbor project failed"
+    re = delete_harbor_project(projectName)
+    assert re.status_code in {200, 201}, "delete general user harbor project failed"
+
+# 修改默认存储，添加仓库项目
+def test_set_harbor_default_quotas():
+    if params[i]["option"] != "harborV2":
+        pytest.skip("harborV1 or harborLdapV1 or harborLdapV2 or harborAdV1 or harborAdV2 does not run")
+
+    re = set_harbor_default_quotas(10737418240)
+    assert re.status_code in {201, 200}, "fail set harbor defautl quotas"
+
+    projectName = "test_quatos"
+    re = add_harbor_project(projectName, 10)
+    assert re.status_code in {200, 201}, "add harbor project failed"
+    re = delete_harbor_project(projectName)
+    assert re.status_code in {200, 201}, "delete harbor project failed"
+
+    projectName = "general_user_test_quatos"
+    re = add_general_user_add_harbor_project(projectName, -1)
+    assert re.status_code in {200, 201}, "general user add harbor project failed"
+    re = delete_harbor_project(projectName)
+    assert re.status_code in {200, 201}, "delete general user harbor project failed"
+
 
 # admin用户修改密码
 @harborcredential
@@ -522,7 +566,7 @@ def get_haroborConfig(headers,harbor_url,api_version):
 
 def admin_user_change_password(newPassword,oldPassword):
     headers = {"cookie": "R_SESS=" + token["auth_admin_user"], "X-API-Harbor-Admin-Header": "true"}
-    users = namespace["users"]
+    users = namespace["users"].data
     for user in users:
         if user.name == "Default Admin":
             admin_user = user
@@ -616,6 +660,87 @@ def add_member_to_private_repo():
     re = requests.post(reUrl, json=config_json, verify=False,
                        headers=headers)
     assert re.status_code in {200,201}  ,"判断给harbor私用项目添加成员"
+
+# https://ha.tangstone.store/meta/harbor/https:/harbor2.tangstone.store/api/v2.0/projects
+def add_harbor_project(projectName,storageLimit):
+
+    headers = {"cookie": "R_SESS=" + token["auth_admin_user"], "X-API-Harbor-Admin-Header": "true"}
+    reUrl = get_harbor_base_project_url()
+    config_json = {
+        "project_name": projectName,
+        "storage_limit": storageLimit,
+        "metadata":
+            {
+                "public": "false"
+            }
+    }
+    re = requests.post(reUrl, json=config_json, verify=False,
+                       headers=headers)
+    return re
+
+# https://ha.tangstone.store/meta/harbor/https:/harbor2.tangstone.store/api/v2.0/configurations
+def get_harbor_configurations_url():
+    harborUrl = params[i]["serverURL"]
+    configurationsUrl = CATTLE_TEST_URL + "/meta/harbor/" + harborUrl.replace('//', '/') + "/api/v2.0/configurations"
+    return configurationsUrl
+
+def set_harbor_default_quotas(storage_per_project):
+    headers = {"cookie": "R_SESS=" + token["auth_admin_user"], "X-API-Harbor-Admin-Header": "true"}
+    configurationsUrl = get_harbor_configurations_url()
+    config_json = {"storage_per_project":storage_per_project}
+    re = requests.put(configurationsUrl, json=config_json, verify=False,
+                       headers=headers)
+    print("bbbbbbbbbbbbbbbb", configurationsUrl)
+    print("aaaaaaaaaaaaaaaa",re.text)
+    return re
+
+
+
+
+# https://ha.tangstone.store/meta/harbor/https:/harbor2.tangstone.store/api/v2.0/projects
+def add_general_user_add_harbor_project(projectName, storageLimit):
+    headers = {"cookie": "R_SESS=" + token["auth_general_user"]}
+    reUrl = get_harbor_base_project_url()
+    config_json = {
+        "project_name": projectName,
+        "storage_limit": storageLimit,
+        "metadata":
+            {
+                "public": "false"
+            }
+    }
+    re = requests.post(reUrl, json=config_json, verify=False,
+                       headers=headers)
+    return re
+
+def get_harbor_base_project_url():
+    harborVersion = params[i]["version"]
+    harborUrl = params[i]["serverURL"]
+    if harborVersion == "v2.0":
+        reUrl = CATTLE_TEST_URL + "/meta/harbor/" + harborUrl.replace('//', '/') + "/api/v2.0/projects"
+    else:
+        reUrl = CATTLE_TEST_URL + "/meta/harbor/" + harborUrl.replace('//', '/') + "/api/projects"
+    return reUrl
+
+def get_harbor_projects_info():
+    headers = {"cookie": "R_SESS=" + token["auth_admin_user"], "X-API-Harbor-Admin-Header": "true"}
+    reUrl = get_harbor_base_project_url()
+    re = requests.get(reUrl, verify=False, headers=headers)
+    assert re.status_code == 200, "获取harbor项目列表"
+    harborProjectList = json.loads(re.text)
+    return harborProjectList
+
+# https://ha.tangstone.store/meta/harbor/https:/harbor2.tangstone.store/api/v2.0/projects/20
+def delete_harbor_project(projectName):
+    headers = {"cookie": "R_SESS=" + token["auth_admin_user"], "X-API-Harbor-Admin-Header": "true"}
+    reUrl = get_harbor_base_project_url()
+    harborProjectList = get_harbor_projects_info()
+    for project in harborProjectList:
+        if project["name"] == projectName:
+            projectId = project["project_id"]
+    delProUrl = reUrl + "/" + str(projectId)
+    re = requests.delete(delProUrl, verify=False, headers=headers)
+    return re
 
 
 def private_image_with_dockercredential():
