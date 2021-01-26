@@ -1,6 +1,10 @@
 import pytest
 from .entfunc import *
 
+"""
+Parameters: -v -s
+Additional Arguments: --count=2 --repeat-scope=session
+"""
 CATTLE_HARBOR_CONFIG_URL = (CATTLE_API_URL + '/users?action=saveharborconfig').replace('//v3','/v3')
 CATTLE_HARBOR_SERVER_URL = (CATTLE_API_URL + '/settings/harbor-server-url').replace('//v3','/v3')
 CATTLE_HARBOR_ADMIN_AUTH = (CATTLE_API_URL + '/settings/harbor-admin-auth').replace('//v3','/v3')

@@ -12,6 +12,8 @@ CATTLE_LOCAL_LOGIN_URL = \
     CATTLE_TEST_URL + \
     "/v3-public/localProviders/local?action=login"
 
+
+
 namespace={}
 
 
@@ -50,6 +52,17 @@ def get_admin_client():
     namespace["admin"] = adminToken
     client = get_client_for_token(adminToken)
     namespace["client"] = client
+
+def delete_general_user(generalUser):
+    reUrl = CATTLE_API_URL + "/" + "users/" + generalUser.id
+    username = RANCHER_LOCAL_ADMIN_USERNAME
+    pwd = RANCHER_LOCAL_ADMIN_PASSWORD
+    url = CATTLE_LOCAL_LOGIN_URL
+    adminToken = get_auth_token(username, pwd, url)
+    headers = {"cookie": "R_SESS=" + adminToken, "X-API-Harbor-Admin-Header": "true"}
+    re = requests.delete(reUrl,headers=headers,verify=False)
+    assert re.status_code == 200,"delete general user failed"
+
 
 def create_general_user():
     # 创建普通用户tanglei
@@ -202,7 +215,7 @@ def print_object(obj):
 def check_filter(*fields,resource,generateFilter=True):
     username = RANCHER_LOCAL_GENERAL_USERNAME
     pwd = RANCHER_LOCAL_GENERAL_PASSWORD
-    url = url = CATTLE_LOCAL_LOGIN_URL
+    url = CATTLE_LOCAL_LOGIN_URL
     generalToken = get_auth_token(username, pwd, url)
     generalClient = get_client_for_token(generalToken)
     if resource == "projectcatalogs":
@@ -263,50 +276,133 @@ def test_get_filter_11():
     generalUser = create_general_user()
     res = add_project_role_to_user(generalUser, roleTemplateId="project-owner")
     # done
+    deleteFilterName = []
     for key,value in filterAll.items():
-        filterName = key
-        for k,v in value.items():
-            if k == "filter-11":
-                nonResourceURLs = filter["filters"][0]["nonResourceURLs"]
-
+        nonResourceURLs = []
+        if key == "cluster-filter-11":
+            for k,v in value.items():
+                if k == "filter-11":
+                    filter = yaml.safe_load(v)
+                    nonResourceURLs = filter["filters"][0]["nonResourceURLs"]
+                    clusters_local.importYaml(yaml=v)
+                    deleteFilterName.append(filter["metadata"]["name"])
+                if k == "isFilter":
+                    assert check_filter_url_cluster_11(*nonResourceURLs,generateFilter=v)
+            delete_filter(*deleteFilterName)
     # 清除赋予角色权限
     resProjectBindings = []
     resProjectBindings.append(res)
     delete_role(*resProjectBindings)
+    delete_general_user(generalUser)
 
-def check_filter_url(*fields,resource,generateFilter=True):
+def test_get_filter_12():
+    client = namespace["client"]
+    clusters_local = client.list_cluster(name="local").data[0]
+    create_kubeconfig(clusters_local)
+
+    path = os.path.abspath('.') + "/v3_api/resource/filter.yaml"
+    with open(path, encoding='utf-8') as f:
+        filterAll = yaml.safe_load(f)
+    # init
+    generalUser = create_general_user()
+    res = add_project_role_to_user(generalUser, roleTemplateId="project-owner")
+    # done
+    deleteFilterName = []
+    for key,value in filterAll.items():
+        nonResourceURLs = []
+        if key == "cluster-filter-12":
+            for k,v in value.items():
+                if k == "filter-12":
+                    filter = yaml.safe_load(v)
+                    nonResourceURLs = filter["filters"][0]["nonResourceURLs"]
+                    clusters_local.importYaml(yaml=v)
+                    deleteFilterName.append(filter["metadata"]["name"])
+                if k == "isFilter":
+                    assert check_filter_url_cluster_12(*nonResourceURLs,generateFilter=v)
+            delete_filter(*deleteFilterName)
+    # 清除赋予角色权限
+    resProjectBindings = []
+    resProjectBindings.append(res)
+    delete_role(*resProjectBindings)
+    delete_general_user(generalUser)
+
+def test_get_filter_13():
+    client = namespace["client"]
+    clusters_local = client.list_cluster(name="local").data[0]
+    create_kubeconfig(clusters_local)
+
+    path = os.path.abspath('.') + "/v3_api/resource/filter.yaml"
+    with open(path, encoding='utf-8') as f:
+        filterAll = yaml.safe_load(f)
+    # init
+    generalUser = create_general_user()
+    res = add_project_role_to_user(generalUser, roleTemplateId="project-owner")
+    # done
+    deleteFilterName = []
+    for key,value in filterAll.items():
+        nonResourceURLs = []
+        if key == "cluster-filter-13":
+            for k,v in value.items():
+                if k == "filter-13":
+                    filter = yaml.safe_load(v)
+                    nonResourceURLs = filter["filters"][0]["nonResourceURLs"]
+                    clusters_local.importYaml(yaml=v)
+                    deleteFilterName.append(filter["metadata"]["name"])
+                if k == "isFilter":
+                    assert check_filter_url_cluster_13(*nonResourceURLs,generateFilter=v)
+            delete_filter(*deleteFilterName)
+    # 清除赋予角色权限
+    resProjectBindings = []
+    resProjectBindings.append(res)
+    delete_role(*resProjectBindings)
+    delete_general_user(generalUser)
+
+
+def check_filter_url_cluster_13(*nonResourceURLs,generateFilter=True):
     username = RANCHER_LOCAL_GENERAL_USERNAME
     pwd = RANCHER_LOCAL_GENERAL_PASSWORD
-    url = url = CATTLE_LOCAL_LOGIN_URL
+    url =  CATTLE_LOCAL_LOGIN_URL
     generalToken = get_auth_token(username, pwd, url)
     generalClient = get_client_for_token(generalToken)
-    if resource == "projectcatalogs":
-        resourceData = generalClient.list_projectCatalog().data[0]
-    elif resource == "clusters":
-        resourceData = generalClient.list_cluster().data[0]
-    elif resource == "projects":
-        resourceData = generalClient.list_project().data[0]
+    clusterActions = generalClient.list_cluster().data[0].actions
+    filterList = ["enableMonitoring","runSecurityScan","saveAsTemplate"]
+    for filte in filterList:
+        for aciton in clusterActions:
+            if aciton == filte and generateFilter:
+                return False
+    return True
+
+def check_filter_url_cluster_12(*nonResourceURLs,generateFilter=True):
+    username = RANCHER_LOCAL_GENERAL_USERNAME
+    pwd = RANCHER_LOCAL_GENERAL_PASSWORD
+    url =  CATTLE_LOCAL_LOGIN_URL
+    generalToken = get_auth_token(username, pwd, url)
+    generalClient = get_client_for_token(generalToken)
+    clusterLinks = generalClient.list_cluster().data[0].links
+    for link in clusterLinks:
+        if link == "clusteralertgroups" and generateFilter:
+            return False
+    return True
+
+
+
+def check_filter_url_cluster_11(*nonResourceURLs,generateFilter=True):
+    username = RANCHER_LOCAL_GENERAL_USERNAME
+    pwd = RANCHER_LOCAL_GENERAL_PASSWORD
+    url =  CATTLE_LOCAL_LOGIN_URL
+    generalToken = get_auth_token(username, pwd, url)
+    generalClient = get_client_for_token(generalToken)
+    actionsList = generalClient.list_cluster().data[0].actions
     count = 0
-    for field in fields:
-        fieldList = field.split('.')
-        temp = resourceData
-        for i in fieldList:
-            try:
-                temp[i]
-            except KeyError:
-                count+=1
-            else:
-                temp = temp[i]
-    if generateFilter:
-        if count == len(fields):
-            return True
-        else:
-            return False
+    for nonResourceURL in nonResourceURLs:
+        nonResourceURLRes = nonResourceURL.split('=')
+        for action in actionsList:
+            if nonResourceURLRes[1] == action:
+                count += 1
+    if count == 0 and generateFilter == True:
+        return True
     else:
-        if count == 0:
-            return True
-        else:
-            return False
+        return False
 
 def test_get_filter_to_10():
     client = namespace["client"]
@@ -428,6 +524,7 @@ def test_get_filter_to_10():
                 fieldsList.clear()
         delete_filter(*deleteFilterName)
         deleteFilterName.clear()
+        delete_general_user(generalUser)
 
 def delete_role(*resProjectBindings):
     # 添加用户tanglei到k8s的default

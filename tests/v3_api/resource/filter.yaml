@@ -1,0 +1,199 @@
+
+cluster-filter-1: #用户包含的角色对过滤器的资源有操作权限，但是不在过滤器roles范围内
+  filter: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-1
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["clusters"]
+      verbs: ["get"]
+      roles: ["cluster-member"]
+      fields: ["appliedSpec.rancherKubernetesEngineConfig", "caCert"]
+  isFilter: False
+cluster-filter-2: #用户包含的角色不在过滤器roleScop范围内
+  filter: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-2
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["clusters"]
+      verbs: ["get"]
+      roleScope: "clusters"
+      fields: ["appliedSpec.rancherKubernetesEngineConfig", "caCert"]
+  isFilter: False
+cluster-filter-3: #用户包含的角色在过滤器的role范围，用户的请求动作在过滤器verbs列表的范围内
+  filter: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-3
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["clusters"]
+      verbs: ["get"]
+      roles: ["project-member"]
+      fields: ["appliedSpec.rancherKubernetesEngineConfig", "caCert"]
+  isFilter: True
+cluster-filter-4: #用户包含的角色在过滤器的role范围，用户的请求动作在过滤器verbs列表的范围内
+  filter: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-4
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["clusters"]
+      verbs: ["get"]
+      roleScope: "project"
+      fields: ["appliedSpec.rancherKubernetesEngineConfig", "caCert"]
+  isFilter: True
+cluster-filter-5: #用户包含的角色在过滤器的role范围，继承的角色对resources中的资源有操作权限
+  filter: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-5
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["projectcatalogs"]
+      verbs: ["get"]
+      roles: ["{{role}}"] # 角色a
+      fields: ["commit", "creatorId"]
+  isFilter: False
+cluster-filter-6: #用户继承的角色在过滤器的role范围,继承的角色对resources中的资源有操作权限
+  filter: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-6
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["projectcatalogs"]
+      verbs: ["get"]
+      roles: ["projectcatalogs-view"] # 角色a
+      fields: ["commit", "creatorId"]
+  isFilter: True
+cluster-filter-7: #用户继承的角色在过滤器的role范围,继承的角色对resources中的资源有操作权限
+  filter: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-7
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["clusters"]
+      verbs: ["get"]
+      roles: ["{{role}}"] # a角色
+      fields: ["appliedSpec.rancherKubernetesEngineConfig", "caCert"]
+  isFilter: False
+cluster-filter-8: #多个过滤器,每个过滤器过滤的资源不同,用户的不同角色分别命中不同的过滤器规则
+  filter-8-1: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-8-1
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["projectcatalogs"]
+      verbs: ["get"]
+      roles: ["projectcatalogs-view"] # 角色a
+      fields: ["commit", "creatorId"]
+  filter-8-2: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-8-2
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["projectcatalogs"]
+      verbs: ["get"]
+      roles: ["{{role}}"]
+      fields: ["commit", "creatorId"]
+  isFilter: True
+cluster-filter-9: #多个过滤器,每个过滤器对过滤的资源相同,用户的a角色隐藏a、b、c字段，b角色隐藏b、c、d字段
+  filter-9-1: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-9-1
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["projectcatalogs"]
+      verbs: ["get"]
+      roles: ["projectcatalogs-view"] # 角色a
+      fields: ["commit", "created"]
+  filter-9-2: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-9-2
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["projectcatalogs"]
+      verbs: ["get"]
+      roles: ["{{role}}"]
+      fields: ["created", "createdTS"]
+  isFilter: True
+cluster-filter-10: #多个过滤器,每个过滤器对过滤的资源相同,用户的a角色隐藏a、b、c字段，b角色隐藏d、e字段
+  filter-10-1: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-10-1
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["projectcatalogs"]
+      verbs: ["get"]
+      roles: ["projectcatalogs-view"] # 角色a
+      fields: ["commit"]
+  filter-10-2: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-10-2
+    filters:
+    - apiGroups: ["management.cattle.io"]
+      resources: ["projectcatalogs"]
+      verbs: ["get"]
+      roles: ["{{role}}"]
+      fields: ["created", "createdTS"]
+  isFilter: False
+cluster-filter-11: #过滤器属性功能,nonResourceURLs（UI按钮过滤）,nonResourceURLs值得设置验证，数组中包含多个url
+  filter-11: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-11
+    filters:
+    - nonResourceURLs: ["/v3/clusters/*?action=backupEtcd", "/v3/clusters/*?action=restoreFromEtcdBackup", "/v3/clusters/*?action=rotateCertificates"]
+      verbs: ["get"]
+      roleScope: "project"
+      roles: ["cluster-member"]
+  isFilter: True
+
+cluster-filter-12: #过滤器属性功能,nonResourceURLs（UI按钮过滤）,nonResourceURLs值得设置验证，url中不包含参数
+  filter-12: |
+    apiVersion: mgt.pandaria.io/v3
+    kind: SensitiveFilter
+    metadata:
+      name: cluster-filter-12
+    filters:
+    - nonResourceURLs: ["/v3/clusters/*/clusteralertgroups"]
+      verbs: ["get"]
+      roles: ["cluster-member","project-member","project-owner"]
+  isFilter: True
+  cluster-filter-13: #过滤器属性功能,nonResourceURLs（UI按钮过滤）,verbs（请求动作），*代表所有动作
+    filter-13: |
+      apiVersion: mgt.pandaria.io/v3
+      kind: SensitiveFilter
+      metadata:
+        name: cluster-filter
+      filters:
+      - nonResourceURLs: ["/v3/clusters/*"]
+        verbs: ["*"]
+        roles: ["cluster-member","project-member","project-owner"]
+    isFilter: True
