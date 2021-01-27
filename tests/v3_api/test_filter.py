@@ -3,10 +3,10 @@ import pytest
 from .entfunc import *
 import yaml
 
-RANCHER_LOCAL_ADMIN_USERNAME = os.environ.get('RANCHER_AD_ADMIN_USERNAME', "admin")
-RANCHER_LOCAL_ADMIN_PASSWORD = os.environ.get('RANCHER_AD_ADMIN_USERNAME', "Nasadmin123!")
-RANCHER_LOCAL_GENERAL_USERNAME = os.environ.get('RANCHER_AD_ADMIN_USERNAME', "tanglei")
-RANCHER_LOCAL_GENERAL_PASSWORD = os.environ.get('RANCHER_AD_ADMIN_USERNAME', "Rancher@123")
+RANCHER_LOCAL_ADMIN_USERNAME = os.environ.get('RANCHER_LOCAL_ADMIN_USERNAME', "admin")
+RANCHER_LOCAL_ADMIN_PASSWORD = os.environ.get('RANCHER_LOCAL_ADMIN_PASSWORD', "Nasadmin123!")
+RANCHER_LOCAL_GENERAL_USERNAME = os.environ.get('RANCHER_LOCAL_GENERAL_USERNAME', "tanglei")
+RANCHER_LOCAL_GENERAL_PASSWORD = os.environ.get('RANCHER_LOCAL_GENERAL_PASSWORD', "Rancher@123")
 
 CATTLE_LOCAL_LOGIN_URL = \
     CATTLE_TEST_URL + \
@@ -34,7 +34,7 @@ def get_auth_token(username,password,reUrl):
     return token
 
 def get_filter(filterName):
-    path = os.path.abspath('.') + "/v3_api/resource/filter.yaml"
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)) + "/resource","filter.yaml")
     with open(path, encoding='utf-8') as f:
         filter = yaml.safe_load(f)
     return filter[filterName]
