@@ -269,7 +269,7 @@ def test_get_filter_11():
     clusters_local = client.list_cluster(name="local").data[0]
     create_kubeconfig(clusters_local)
 
-    path = os.path.abspath('.') + "/v3_api/resource/filter.yaml"
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)) + "/resource","filter.yaml")
     with open(path, encoding='utf-8') as f:
         filterAll = yaml.safe_load(f)
     # init
@@ -300,7 +300,7 @@ def test_get_filter_12():
     clusters_local = client.list_cluster(name="local").data[0]
     create_kubeconfig(clusters_local)
 
-    path = os.path.abspath('.') + "/v3_api/resource/filter.yaml"
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)) + "/resource","filter.yaml")
     with open(path, encoding='utf-8') as f:
         filterAll = yaml.safe_load(f)
     # init
@@ -331,7 +331,7 @@ def test_get_filter_13():
     clusters_local = client.list_cluster(name="local").data[0]
     create_kubeconfig(clusters_local)
 
-    path = os.path.abspath('.') + "/v3_api/resource/filter.yaml"
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)) + "/resource","filter.yaml")
     with open(path, encoding='utf-8') as f:
         filterAll = yaml.safe_load(f)
     # init
@@ -409,7 +409,7 @@ def test_get_filter_to_10():
     clusters_local = client.list_cluster(name="local").data[0]
     create_kubeconfig(clusters_local)
 
-    path = os.path.abspath('.') + "/v3_api/resource/filter.yaml"
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)) + "/resource","filter.yaml")
     with open(path, encoding='utf-8') as f:
         filterAll = yaml.safe_load(f)
     # init
